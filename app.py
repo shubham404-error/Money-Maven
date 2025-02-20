@@ -68,33 +68,33 @@ if selected == "Stock Dashboard":
 
     if ticker:
         try:
-            # Fetch Stock Data
-data = yf.download(ticker, start=start_date, end=end_date)
+            data = yf.download(ticker, start=start_date, end=end_date)
+            if data.empty:
+                st.error("No stock data available. Please check the ticker symbol and date range.")
+                st.write("🔍 **Debug Info:**", {"Ticker": ticker, "Start Date": start_date, "End Date": end_date})
+            else:
+                # Show fetched data for debugging
+                st.write("📊 **Fetched Data Preview:**", data.head())
 
-if data.empty:
-    st.error("No stock data available. Please check the ticker symbol and date range.")
-    st.write("🔍 **Debug Info:**", {"Ticker": ticker, "Start Date": start_date, "End Date": end_date})
-else:
-    # Show fetched data for debugging
-    st.write("📊 **Fetched Data Preview:**", data.head())
-
-    # Plot Candlestick Chart
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(
-        x=data.index,
-        open=data['Open'],
-        high=data['High'],
-        low=data['Low'],
-        close=data['Close'],
-        name='Candlestick'
-    ))
-    fig.update_layout(
-        title=f'{ticker} Candlestick Chart',
-        xaxis_title='Date',
-        yaxis_title='Price',
-        xaxis_rangeslider_visible=False
-    )
-    st.plotly_chart(fig)
+                # Plot Candlestick Chart
+                fig = go.Figure()
+                fig.add_trace(go.Candlestick(
+                    x=data.index,
+                    open=data['Open'],
+                    high=data['High'],
+                    low=data['Low'],
+                    close=data['Close'],
+                    name='Candlestick'
+                ))
+                fig.update_layout(
+                    title=f'{ticker} Candlestick Chart',
+                    xaxis_title='Date',
+                    yaxis_title='Price',
+                    xaxis_rangeslider_visible=False
+                )
+                st.plotly_chart(fig)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
 
 
     # Tabs for Different Data Analysis
