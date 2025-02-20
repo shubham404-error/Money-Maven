@@ -59,7 +59,7 @@ with st.sidebar:
         default_index=0,
         orientation="vertical",
     )
-   st.write(
+    st.write(
         """
         <style>
             .css-r698ls {
