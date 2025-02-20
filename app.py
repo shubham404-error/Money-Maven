@@ -60,50 +60,6 @@ if "watchlist" not in st.session_state:
 if selected == "Stock Dashboard":
     st.title('📈 Stock Dashboard')
     st.link_button("🔗 Open Full Stock Dashboard", "https://stocks-dashboard-404.streamlit.app/")
-        # Add stock to watchlist
-    ticker = st.text_input("Enter stock ticker (e.g., AAPL, TSLA):")
-    if st.button("Add to Watchlist") and ticker:
-        if ticker.upper() not in st.session_state.watchlist:
-            st.session_state.watchlist.append(ticker.upper())
-            st.success(f"{ticker.upper()} added to watchlist!")
-        else:
-            st.warning("Stock already in watchlist.")
-
-    # Display watchlist
-    if st.session_state.watchlist:
-        st.subheader("📋 Your Watchlist")
-        watchlist_data = []
-        for stock in st.session_state.watchlist:
-            try:
-                stock_data = yf.Ticker(stock).history(period="1d")
-                if not stock_data.empty:
-                    last_price = stock_data["Close"].iloc[-1]
-                    open_price = stock_data["Open"].iloc[-1]
-                    high_price = stock_data["High"].iloc[-1]
-                    low_price = stock_data["Low"].iloc[-1]
-                    volume = stock_data["Volume"].iloc[-1]
-                    watchlist_data.append({
-                        "Stock": stock,
-                        "Open": open_price,
-                        "High": high_price,
-                        "Low": low_price,
-                        "Close": last_price,
-                        "LTP": last_price,
-                        "Volume": volume
-                    })
-                else:
-                    watchlist_data.append({"Stock": stock, "Open": "N/A", "High": "N/A", "Low": "N/A", "Close": "N/A", "LTP": "N/A", "Volume": "N/A"})
-            except:
-                watchlist_data.append({"Stock": stock, "Open": "Error", "High": "Error", "Low": "Error", "Close": "Error", "LTP": "Error", "Volume": "Error"})
-        
-        df = pd.DataFrame(watchlist_data)
-        st.dataframe(df)
-
-    # Remove stock from watchlist
-    remove_ticker = st.selectbox("Remove stock from watchlist:", ["Select"] + st.session_state.watchlist)
-    if remove_ticker != "Select" and st.button("Remove"):
-        st.session_state.watchlist.remove(remove_ticker)
-        st.success(f"{remove_ticker} removed from watchlist.")
 
     
 # ChatBot Section
