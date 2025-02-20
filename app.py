@@ -33,6 +33,27 @@ model = gen_ai.GenerativeModel('gemini-pro')
 # Initialize chat session in Streamlit if not already present
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = model.start_chat(history=[])
+# Initialize watchlist in session state
+if "watchlist" not in st.session_state:
+    st.session_state.watchlist = []
+
+# Function to get stock data
+def get_stock_data(symbol):
+    try:
+        stock = yf.Ticker(symbol)
+        data = stock.history(period='1d')
+        if not data.empty:
+            return {
+                'Last Price': data['Close'].iloc[-1],
+                'Open': data['Open'].iloc[-1],
+                'High': data['High'].iloc[-1],
+                'Low': data['Low'].iloc[-1],
+                'Volume': data['Volume'].iloc[-1]
+            }
+        return None
+    except Exception as e:
+        st.error(f"Error fetching data for {symbol}: {str(e)}")
+        return None
 
 # Safety settings for Gemini
 safety_settings = [
@@ -52,13 +73,57 @@ with st.sidebar:
         default_index=0,
         orientation="vertical",
     )
-# Initialize watchlist in session state
-if "watchlist" not in st.session_state:
-    st.session_state.watchlist = []
 
 # Stock Dashboard Section
 if selected == "Stock Dashboard":
     st.title('📈 Stock Dashboard')
+    
+    # Add stock to watchlist
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        new_stock = st.text_input("Enter stock symbol (e.g., AAPL, GOOGL)", key="stock_input")
+    
+    with col2:
+        if st.button("Add to Watchlist"):
+            if new_stock:
+                if new_stock not in st.session_state.watchlist:
+                    st.session_state.watchlist.append(new_stock.upper())
+                    st.success(f"Added {new_stock.upper()} to watchlist!")
+                else:
+                    st.warning("Stock already in watchlist!")
+    
+    # Display watchlist
+    if st.session_state.watchlist:
+        st.subheader("Your Watchlist")
+        
+        # Create a container for the watchlist table
+        watchlist_container = st.container()
+        
+        # Create columns for the table header
+        cols = watchlist_container.columns([1, 1, 1, 1, 1, 1, 1])
+        headers = ["Symbol", "Last Price", "Open", "High", "Low", "Volume", "Action"]
+        
+        for col, header in zip(cols, headers):
+            col.markdown(f"**{header}**")
+        
+        # Display stock data
+        for symbol in st.session_state.watchlist:
+            stock_data = get_stock_data(symbol)
+            
+            if stock_data:
+                cols = watchlist_container.columns([1, 1, 1, 1, 1, 1, 1])
+                cols[0].write(symbol)
+                cols[1].write(f"${stock_data['Last Price']:.2f}")
+                cols[2].write(f"${stock_data['Open']:.2f}")
+                cols[3].write(f"${stock_data['High']:.2f}")
+                cols[4].write(f"${stock_data['Low']:.2f}")
+                cols[5].write(f"{stock_data['Volume']:,.0f}")
+                
+                if cols[6].button("Remove", key=f"remove_{symbol}"):
+                    st.session_state.watchlist.remove(symbol)
+                    st.rerun()
+    
     st.link_button("🔗 Open Full Stock Dashboard", "https://stocks-dashboard-404.streamlit.app/")
 
     
