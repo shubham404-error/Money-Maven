@@ -74,56 +74,65 @@ with st.sidebar:
 # Stock Dashboard Section
 # Stock Dashboard Section
 if selected == "Stock Dashboard":
-    st.title('Stock Market Dashboard')
+    st.title('📈 Stock Market Dashboard')
 
-    # Sidebar inputs for stock analysis
-    ticker = st.sidebar.text_input('Ticker', value='AAPL')
-    start_date = st.sidebar.date_input('Start Date')
-    end_date = st.sidebar.date_input('End Date')
-    if ticker and start_date and end_date:
-        try:
-            # Fetch Stock Data
-            data = yf.download(ticker, start=start_date, end=end_date)
+# Sidebar inputs for stock analysis
+default_start = date.today() - timedelta(days=180)
+default_end = date.today()
 
-            if not data.empty:
-                # Plot Candlestick Chart
-                fig = go.Figure()
-                fig.add_trace(go.Candlestick(
-                    x=data.index,
-                    open=data['Open'],
-                    high=data['High'],
-                    low=data['Low'],
-                    close=data['Close'],
-                    name='Candlesticks'
-                ))
-                fig.update_layout(title=f'{ticker} Candlestick Chart', xaxis_title='Date', yaxis_title='Price')
-                st.plotly_chart(fig)
-            else:
-                st.error("No data found. Please check the ticker symbol and date range.")
-        except Exception as e:
-            st.error(f"Error fetching stock data: {e}")
+ticker = st.sidebar.text_input('Ticker Symbol', value='AAPL')
+start_date = st.sidebar.date_input('Start Date', value=default_start)
+end_date = st.sidebar.date_input('End Date', value=default_end)
 
-
-    # Tabs for Different Data
-    pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
-
-    with pricing_data:
-        st.header("Price Movements")
+if ticker:
+    try:
+        # Fetch Stock Data
+        data = yf.download(ticker, start=start_date, end=end_date)
+        
         if not data.empty:
-            data['% Change'] = data['Price'].pct_change()
-            data.dropna(inplace=True)
-
-            st.write(data)
-
-            annual_return = data['% Change'].mean() * 252 * 100
-            stdev = np.std(data['% Change']) * np.sqrt(252) * 100
-            risk_adj_return = annual_return / stdev if stdev != 0 else 0
-
-            st.write(f'📈 **Annual Return:** {annual_return:.2f}%')
-            st.write(f'📊 **Standard Deviation:** {stdev:.2f}%')
-            st.write(f'📉 **Risk-Adjusted Return:** {risk_adj_return:.2f}')
+            # Plot Candlestick Chart
+            fig = go.Figure()
+            fig.add_trace(go.Candlestick(
+                x=data.index,
+                open=data['Open'],
+                high=data['High'],
+                low=data['Low'],
+                close=data['Close'],
+                name='Candlestick'
+            ))
+            fig.update_layout(
+                title=f'{ticker} Candlestick Chart',
+                xaxis_title='Date',
+                yaxis_title='Price',
+                xaxis_rangeslider_visible=False
+            )
+            st.plotly_chart(fig)
         else:
-            st.warning("No pricing data available.")
+            st.error("No data found. Please check the ticker symbol and date range.")
+    except Exception as e:
+        st.error(f"Error fetching stock data: {e}")
+
+# Tabs for Different Data Analysis
+pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
+
+with pricing_data:
+    st.header("📊 Price Movements")
+    if not data.empty:
+        data['% Change'] = data['Close'].pct_change() * 100
+        data.dropna(inplace=True)
+        
+        st.dataframe(data[['Close', '% Change']])
+        
+        annual_return = data['% Change'].mean() * 252
+        stdev = np.std(data['% Change']) * np.sqrt(252)
+        risk_adj_return = annual_return / stdev if stdev != 0 else 0
+        
+        st.write(f'📈 **Annual Return:** {annual_return:.2f}%')
+        st.write(f'📊 **Standard Deviation:** {stdev:.2f}%')
+        st.write(f'⚖️ **Risk-Adjusted Return:** {risk_adj_return:.2f}')
+    else:
+        st.warning("No pricing data available.")
+
 
     # Fetch Fundamental Data from Alpha Vantage
     with fundamental_data:
