@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from PIL import Image
 import yfinance as yf
+import google.generativeai as gen_ai
+import google.ai.generativelanguage as glm
 import os
 from dotenv import load_dotenv
 from streamlit_option_menu import option_menu
