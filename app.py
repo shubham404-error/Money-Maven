@@ -50,7 +50,7 @@ def image_to_byte_array(image: Image) -> bytes:
 with st.sidebar:
     selected = option_menu(
         menu_title="Finance & Health",
-        options=["Stock Dashboard", "DocBot", "VisionBot"],
+        options=["Stock Dashboard", "VisionBot"],
         icons=["graph-up", "robot", "eye"],
         default_index=0,
         orientation="vertical",
@@ -149,30 +149,6 @@ if selected == "Stock Dashboard":
                 st.error("No data found for this ticker")
         except Exception as e:
             st.error(f"Error: {e}")
-
-# DocBot Section
-elif selected == "DocBot":
-    st.title("Chat with DocBot")
-    
-    # Initialize chat session
-    if "chat_session" not in st.session_state:
-        model = gen_ai.GenerativeModel('gemini-pro')
-        st.session_state.chat_session = model.start_chat(history=[])
-
-    # Display chat history
-    for message in st.session_state.chat_session.history:
-        with st.chat_message(translate_role_for_streamlit(message.role)):
-            st.markdown(message.parts[0].text)
-
-    # Chat input
-    user_prompt = st.chat_input("Ask DocBot...")
-    if user_prompt:
-        st.chat_message("user").markdown(user_prompt)
-        response = st.session_state.chat_session.send_message(
-            user_prompt
-        )
-        with st.chat_message("assistant"):
-            st.markdown(response.text)
 
 # VisionBot Section
 elif selected == "VisionBot":
