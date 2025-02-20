@@ -59,7 +59,7 @@ with st.sidebar:
 # Stock Dashboard Section
 if selected == "Stock Dashboard":
     st.title('Stock Market Dashboard')
-    
+
     # Sidebar inputs for stock analysis
     ticker = st.sidebar.text_input('Ticker', value='AAPL')
     start_date = st.sidebar.date_input('Start Date')
@@ -67,32 +67,35 @@ if selected == "Stock Dashboard":
 
     if ticker and start_date and end_date:
         try:
+            # Fetch Stock Data
             data = yf.download(ticker, start=start_date, end=end_date)
-            
+
             if not data.empty:
-                if isinstance(data.columns, pd.MultiIndex):
-                    data = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
-                else:
-                    data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
-                
-                data.rename(columns={data.columns[0]: "Price"}, inplace=True)
-                
+                # Ensure single-column format for price
+                if 'Adj Close' in data.columns:
+                    data = data[['Adj Close']]
+                    data.rename(columns={'Adj Close': "Price"}, inplace=True)
+                elif 'Close' in data.columns:
+                    data = data[['Close']]
+                    data.rename(columns={'Close': "Price"}, inplace=True)
+
+                # Plot Price Chart
                 fig = px.line(data, x=data.index, y="Price", title=ticker)
                 st.plotly_chart(fig)
 
                 # Tabs for different data views
                 pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
-                
+
                 with pricing_data:
                     st.header("Price Movements")
                     data['% Change'] = data['Price'].pct_change()
                     data.dropna(inplace=True)
                     st.write(data)
-                    
+
                     annual_return = data['% Change'].mean() * 252 * 100
                     stdev = np.std(data['% Change']) * np.sqrt(252) * 100
                     risk_adj_return = annual_return / stdev if stdev != 0 else 0
-                    
+
                     col1, col2, col3 = st.columns(3)
                     with col1:
                         st.metric("Annual Return", f"{annual_return:.2f}%")
@@ -111,7 +114,7 @@ if selected == "Stock Dashboard":
                                 (fd.get_cash_flow_annual, "Cash Flow Statement")
                             ]:
                                 st.subheader(title)
-                                data = statement(ticker)[0]
+                                data, _ = statement(ticker)
                                 df = data.T[2:]
                                 df.columns = list(data.T.iloc[0])
                                 st.write(df)
@@ -131,8 +134,9 @@ if selected == "Stock Dashboard":
                                 'limit': 10,
                             })
                             conn.request('GET', f'/v1/news/all?{params}')
-                            news_data = json.loads(conn.getresponse().read().decode('utf-8'))
-                            
+                            response = conn.getresponse()
+                            news_data = json.loads(response.read().decode('utf-8'))
+
                             if 'data' in news_data:
                                 for i, article in enumerate(news_data['data'][:10]):
                                     with st.expander(f"📰 {article['title']}"):
@@ -145,15 +149,17 @@ if selected == "Stock Dashboard":
                             st.error(f"Error fetching news: {e}")
                     else:
                         st.warning("MarketAux API key is missing")
+
             else:
-                st.error("No data found for this ticker")
+                st.error("No data found. Please check the ticker symbol and date range.")
+
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Error fetching stock data: {e}")
 
 # VisionBot Section
 elif selected == "VisionBot":
     st.title("VisionBot Analysis")
-    
+
     image_prompt = st.text_input("Describe what you'd like to analyze in the image")
     uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "webp"])
 
@@ -166,7 +172,7 @@ elif selected == "VisionBot":
                 model = gen_ai.GenerativeModel("gemini-1.5-flash")
                 try:
                     response = model.generate_content(
-                        [image_prompt, image],
+                        [image_prompt, image_to_byte_array(image)],
                         safety_settings=safety_settings
                     )
                     st.markdown("### Analysis")
