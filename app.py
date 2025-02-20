@@ -86,24 +86,23 @@ if selected == "Stock Dashboard":
             data = yf.download(ticker, start=start_date, end=end_date)
 
             if not data.empty:
-                # Handle cases where Yahoo Finance returns MultiIndex columns
-                if isinstance(data.columns, pd.MultiIndex):
-                    data = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
-                else:
-                    data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
-
-                # Rename the column to avoid confusion
-                data.rename(columns={data.columns[0]: "Price"}, inplace=True)
-
-                # Plot Price Chart
-                fig = px.line(data, x=data.index, y="Price", title=ticker)
+                # Plot Candlestick Chart
+                fig = go.Figure()
+                fig.add_trace(go.Candlestick(
+                    x=data.index,
+                    open=data['Open'],
+                    high=data['High'],
+                    low=data['Low'],
+                    close=data['Close'],
+                    name='Candlesticks'
+                ))
+                fig.update_layout(title=f'{ticker} Candlestick Chart', xaxis_title='Date', yaxis_title='Price')
                 st.plotly_chart(fig)
-
             else:
                 st.error("No data found. Please check the ticker symbol and date range.")
-
         except Exception as e:
             st.error(f"Error fetching stock data: {e}")
+
 
     # Tabs for Different Data
     pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
