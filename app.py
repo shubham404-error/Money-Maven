@@ -18,7 +18,7 @@ from streamlit_option_menu import option_menu
 load_dotenv()
 
 # Page config
-st.set_page_config(page_title="Finance & Health Assistant", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Money Maven Pro", page_icon="🤖", layout="wide")
 st.image("logo.png",width=100)
 
 # Initialize API keys
@@ -81,22 +81,29 @@ if selected == "Stock Dashboard":
     end_date = st.sidebar.date_input('End Date')
 
     if ticker and start_date and end_date:
-        try:
-            # Fetch Stock Data
-            data = yf.download(ticker, start=start_date, end=end_date)
+    try:
+        # Fetch Stock Data
+        data = yf.download(ticker, start=start_date, end=end_date)
 
-            if not data.empty:
-                # Ensure single-column format for price
-                if 'Adj Close' in data.columns:
-                    data = data[['Adj Close']]
-                    data.rename(columns={'Adj Close': "Price"}, inplace=True)
-                elif 'Close' in data.columns:
-                    data = data[['Close']]
-                    data.rename(columns={'Close': "Price"}, inplace=True)
+        if not data.empty:
+            # Handle cases where Yahoo Finance returns MultiIndex columns
+            if isinstance(data.columns, pd.MultiIndex):
+                data = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
+            else:
+                data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
 
-                # Plot Price Chart
-                fig = px.line(data, x=data.index, y="Price", title=ticker)
-                st.plotly_chart(fig)
+            # Rename the column to avoid confusion
+            data.rename(columns={data.columns[0]: "Price"}, inplace=True)
+
+            # Plot Price Chart
+            fig = px.line(data, x=data.index, y="Price", title=ticker)
+            st.plotly_chart(fig)
+
+        else:
+            st.error("No data found. Please check the ticker symbol and date range.")
+
+    except Exception as e:
+        st.error(f"Error fetching stock data: {e}")
 
                 # Tabs for different data views
                 pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
