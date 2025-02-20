@@ -61,22 +61,27 @@ if selected == "Stock Dashboard":
     ticker = st.sidebar.text_input('Ticker', value='AAPL')
     start_date = st.sidebar.date_input('Start Date')
     end_date = st.sidebar.date_input('End Date')
-
+    
     if ticker and start_date and end_date:
         try:
             # Fetch Stock Data
             data = yf.download(ticker, start=start_date, end=end_date)
 
             if not data.empty:
-                data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
+                # Handle cases where Yahoo Finance returns MultiIndex columns
+                if isinstance(data.columns, pd.MultiIndex):
+                    data = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
+                else:
+                    data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
+
+                # Rename the column to avoid confusion
                 data.rename(columns={data.columns[0]: "Price"}, inplace=True)
-                
+
                 # Plot Price Chart
                 fig = px.line(data, x=data.index, y="Price", title=ticker)
                 st.plotly_chart(fig)
             else:
                 st.error("No data found. Please check the ticker symbol and date range.")
-
         except Exception as e:
             st.error(f"Error fetching stock data: {e}")
 
