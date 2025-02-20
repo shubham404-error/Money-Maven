@@ -72,6 +72,7 @@ with st.sidebar:
     )
 
 # Stock Dashboard Section
+# Stock Dashboard Section
 if selected == "Stock Dashboard":
     st.title('Stock Market Dashboard')
 
@@ -82,29 +83,22 @@ if selected == "Stock Dashboard":
 
     if ticker and start_date and end_date:
         try:
-        # Fetch Stock Data
-        data = yf.download(ticker, start=start_date, end=end_date)
+            # Fetch Stock Data
+            data = yf.download(ticker, start=start_date, end=end_date)
 
-        if not data.empty:
-            # Handle cases where Yahoo Finance returns MultiIndex columns
-            if isinstance(data.columns, pd.MultiIndex):
-                data = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
-            else:
-                data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
+            if not data.empty:
+                # Handle cases where Yahoo Finance returns MultiIndex columns
+                if isinstance(data.columns, pd.MultiIndex):
+                    data = data['Adj Close'] if 'Adj Close' in data.columns else data['Close']
+                else:
+                    data = data[['Adj Close']] if 'Adj Close' in data.columns else data[['Close']]
 
-            # Rename the column to avoid confusion
-            data.rename(columns={data.columns[0]: "Price"}, inplace=True)
+                # Rename the column to avoid confusion
+                data.rename(columns={data.columns[0]: "Price"}, inplace=True)
 
-            # Plot Price Chart
-            fig = px.line(data, x=data.index, y="Price", title=ticker)
-            st.plotly_chart(fig)
-
-        else:
-            st.error("No data found. Please check the ticker symbol and date range.")
-
-    except Exception as e:
-        st.error(f"Error fetching stock data: {e}")
-    
+                # Plot Price Chart
+                fig = px.line(data, x=data.index, y="Price", title=ticker)
+                st.plotly_chart(fig)
 
                 # Tabs for different data views
                 pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
@@ -178,6 +172,7 @@ if selected == "Stock Dashboard":
 
         except Exception as e:
             st.error(f"Error fetching stock data: {e}")
+
 elif selected == "ChatBot":
      # Display the chatbot's title on the page
     st.title("Chat with Money Maven Bot™")
