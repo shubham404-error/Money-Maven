@@ -176,7 +176,6 @@ with news:
         except Exception as e:
             st.error(f"Error fetching news: {e}")
 
-
 elif selected == "ChatBot":
     st.title("Chat with Money Maven Bot™")
     user_prompt = st.chat_input("Ask DocBot...")
