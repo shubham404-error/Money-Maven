@@ -56,25 +56,8 @@ with st.sidebar:
 # Stock Dashboard Section
 if selected == "Stock Dashboard":
     st.title('📈 Stock Dashboard')
-     # Redirect button to external dashboard
-    st.markdown(
-        """
-        <a href="https://stocks-dashboard-404.streamlit.app/" target="_self">
-            <button style="
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 15px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 16px;
-            ">
-                🔗 Go to Full Stock Dashboard
-            </button>
-        </a>
-        """,
-        unsafe_allow_html=True
-    )
+    st.link_button("🔗 Open Full Stock Dashboard", "https://stocks-dashboard-404.streamlit.app/")
+
     
 # ChatBot Section
 elif selected == "ChatBot":
