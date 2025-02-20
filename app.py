@@ -45,12 +45,14 @@ def image_to_byte_array(image: Image) -> bytes:
     imgByteArr = io.BytesIO()
     image.save(imgByteArr, format=image.format)
     return imgByteArr.getvalue()
-
+# Initialize chat session in Streamlit if not already present
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = model.start_chat(history=[])
 # Main navigation
 with st.sidebar:
     selected = option_menu(
-        menu_title="Finance & Health",
-        options=["Stock Dashboard", "VisionBot"],
+        menu_title="Finance",
+        options=["Stock Dashboard", 'ChatBot',"VisionBot"],
         icons=["graph-up", "robot", "eye"],
         default_index=0,
         orientation="vertical",
@@ -155,7 +157,24 @@ if selected == "Stock Dashboard":
 
         except Exception as e:
             st.error(f"Error fetching stock data: {e}")
+elif selected == "ChatBot":
+    st.title("Chat with MoneyMaven™")
 
+    # Display the chat history
+    for message in st.session_state.chat_session.history:
+        with st.chat_message(translate_role_for_streamlit(message.role)):
+            st.markdown(message.parts[0].text)
+
+    # Input field for user's message
+    user_prompt = st.chat_input("Ask DocBot...")
+
+    if user_prompt:
+        # Add user's message to chat and display it
+        st.chat_message("user").markdown(user_prompt)
+        
+        gemini_response = st.session_state.chat_session.send_message(
+        user_prompt, safety_settings=safety_settings
+    )
 # VisionBot Section
 elif selected == "VisionBot":
     st.title("VisionBot Analysis")
