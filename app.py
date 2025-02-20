@@ -19,6 +19,7 @@ load_dotenv()
 
 # Page config
 st.set_page_config(page_title="Finance & Health Assistant", page_icon="🤖", layout="wide")
+st.image("logo.png",width=100)
 
 # Initialize API keys
 alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
@@ -171,7 +172,7 @@ if selected == "Stock Dashboard":
             st.error(f"Error fetching stock data: {e}")
 elif selected == "ChatBot":
      # Display the chatbot's title on the page
-    st.title("Chat with Swasthya DocBot™")
+    st.title("Chat with Money Maven Bot™")
 
     # Display the chat history
     for message in st.session_state.chat_session.history:
