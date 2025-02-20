@@ -61,7 +61,7 @@ if selected == "Stock Dashboard":
     ticker = st.sidebar.text_input('Ticker', value='AAPL')
     start_date = st.sidebar.date_input('Start Date')
     end_date = st.sidebar.date_input('End Date')
-    
+
     if ticker and start_date and end_date:
         try:
             # Fetch Stock Data
@@ -80,8 +80,10 @@ if selected == "Stock Dashboard":
                 # Plot Price Chart
                 fig = px.line(data, x=data.index, y="Price", title=ticker)
                 st.plotly_chart(fig)
+
             else:
                 st.error("No data found. Please check the ticker symbol and date range.")
+
         except Exception as e:
             st.error(f"Error fetching stock data: {e}")
 
@@ -90,13 +92,17 @@ if selected == "Stock Dashboard":
 
     with pricing_data:
         st.header("Price Movements")
+
         if not data.empty:
             data['% Change'] = data['Price'].pct_change()
             data.dropna(inplace=True)
+
             st.write(data)
+
             annual_return = data['% Change'].mean() * 252 * 100
             stdev = np.std(data['% Change']) * np.sqrt(252) * 100
             risk_adj_return = annual_return / stdev if stdev != 0 else 0
+
             st.write(f'📈 **Annual Return:** {annual_return:.2f}%')
             st.write(f'📊 **Standard Deviation:** {stdev:.2f}%')
             st.write(f'📉 **Risk-Adjusted Return:** {risk_adj_return:.2f}')
@@ -105,43 +111,57 @@ if selected == "Stock Dashboard":
 
     # Fetch Fundamental Data from Alpha Vantage
     with fundamental_data:
+        alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')  # Fetch API Key from Environment
+
         if not alpha_vantage_key:
             st.warning("Alpha Vantage API key is missing. Set ALPHA_VANTAGE_API_KEY in environment variables.")
         else:
             fd = FundamentalData(alpha_vantage_key, output_format='pandas')
+
             try:
                 st.subheader('Balance Sheet')
                 balance_sheet = fd.get_balance_sheet_annual(ticker)[0]
                 bs = balance_sheet.T[2:]
                 bs.columns = list(balance_sheet.T.iloc[0])
                 st.write(bs)
-                
+
                 st.subheader('Income Statement')
                 income_statement = fd.get_income_statement_annual(ticker)[0]
                 is1 = income_statement.T[2:]
                 is1.columns = list(income_statement.T.iloc[0])
                 st.write(is1)
-                
+
                 st.subheader('Cash Flow Statement')
                 cash_flow = fd.get_cash_flow_annual(ticker)[0]
                 cf = cash_flow.T[2:]
                 cf.columns = list(cash_flow.T.iloc[0])
                 st.write(cf)
+
             except Exception as e:
                 st.error(f"Error fetching fundamental data: {e}")
 
     # Fetch News from MarketAux API
     with news:
         st.header(f'📢 Latest News for {ticker}')
+
+        marketaux_api_key = os.getenv('MARKETAUX_API_KEY')  # Fetch API Key from Environment
+
         if not marketaux_api_key:
             st.warning("MarketAux API key is missing. Set MARKETAUX_API_KEY in environment variables.")
         else:
             conn = http.client.HTTPSConnection('api.marketaux.com')
-            params = urllib.parse.urlencode({'api_token': marketaux_api_key, 'symbols': ticker, 'limit': 10})
+
+            params = urllib.parse.urlencode({
+                'api_token': marketaux_api_key,
+                'symbols': ticker,
+                'limit': 10,
+            })
+
             try:
                 conn.request('GET', f'/v1/news/all?{params}')
                 res = conn.getresponse()
                 news_data = json.loads(res.read().decode('utf-8'))
+
                 if 'data' in news_data:
                     for i, article in enumerate(news_data['data'][:10]):
                         st.subheader(f'📰 News {i+1}: {article["title"]}')
@@ -151,9 +171,11 @@ if selected == "Stock Dashboard":
                         st.markdown("---")
                 else:
                     st.warning("No news found.")
+
             except Exception as e:
                 st.error(f"Error fetching news: {e}")
 
+# ChatBot Section
 elif selected == "ChatBot":
     st.title("Chat with Money Maven Bot™")
     user_prompt = st.chat_input("Ask DocBot...")
@@ -162,6 +184,7 @@ elif selected == "ChatBot":
         response = st.session_state.chat_session.send_message(user_prompt, safety_settings=safety_settings)
         st.chat_message("assistant").markdown(response.text)
 
+# VisionBot Section
 elif selected == "VisionBot":
     st.title("VisionBot Analysis")
     uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "webp"])
