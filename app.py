@@ -25,9 +25,20 @@ alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
 marketaux_api_key = os.getenv('MARKETAUX_API_KEY')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
-# Configure Gemini
+# Set up Google Gemini-Pro AI model
 gen_ai.configure(api_key=GOOGLE_API_KEY)
 model = gen_ai.GenerativeModel('gemini-pro')
+
+# Function to translate roles between Gemini-Pro and Streamlit terminology
+def translate_role_for_streamlit(user_role):
+    if user_role == "model":
+        return "assistant"
+    else:
+        return user_role
+
+# Initialize chat session in Streamlit if not already present
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = model.start_chat(history=[])
 
 # Safety settings for Gemini
 safety_settings = [
@@ -38,17 +49,7 @@ safety_settings = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
-# Helper functions
-def translate_role_for_streamlit(user_role):
-    return "assistant" if user_role == "model" else user_role
 
-def image_to_byte_array(image: Image) -> bytes:
-    imgByteArr = io.BytesIO()
-    image.save(imgByteArr, format=image.format)
-    return imgByteArr.getvalue()
-# Initialize chat session in Streamlit if not already present
-if "chat_session" not in st.session_state:
-    st.session_state.chat_session = model.start_chat(history=[])
 # Main navigation
 with st.sidebar:
     selected = option_menu(
@@ -57,6 +58,16 @@ with st.sidebar:
         icons=["graph-up", "robot", "eye"],
         default_index=0,
         orientation="vertical",
+    )
+   st.write(
+        """
+        <style>
+            .css-r698ls {
+                --sidebar-width: 200px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
 
 # Stock Dashboard Section
@@ -159,7 +170,8 @@ if selected == "Stock Dashboard":
         except Exception as e:
             st.error(f"Error fetching stock data: {e}")
 elif selected == "ChatBot":
-    st.title("Chat with MoneyMaven™")
+     # Display the chatbot's title on the page
+    st.title("Chat with Swasthya DocBot™")
 
     # Display the chat history
     for message in st.session_state.chat_session.history:
@@ -172,10 +184,15 @@ elif selected == "ChatBot":
     if user_prompt:
         # Add user's message to chat and display it
         st.chat_message("user").markdown(user_prompt)
+
+        # Send user's message to Gemini-Pro and get the response
         
         gemini_response = st.session_state.chat_session.send_message(
         user_prompt, safety_settings=safety_settings
     )
+        # Display Gemini-Pro's response
+        with st.chat_message("assistant"):
+            st.markdown(gemini_response.text)
 # VisionBot Section
 elif selected == "VisionBot":
     st.title("VisionBot Analysis")
