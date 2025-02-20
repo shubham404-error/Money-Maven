@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
-import plotly.express as px
+import plotly.graph_objects as go
 import http.client
 import os
 import urllib.parse
@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import google.generativeai as gen_ai
 from PIL import Image
 import io
+from datetime import date, timedelta
 from streamlit_option_menu import option_menu
 
 # Load environment variables
@@ -19,7 +20,7 @@ load_dotenv()
 
 # Page config
 st.set_page_config(page_title="Money Maven Pro", page_icon="🤖", layout="wide")
-st.image("logo.png",width=100)
+st.image("logo.png", width=100)
 
 # Initialize API keys
 alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
@@ -29,13 +30,6 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 # Set up Google Gemini-Pro AI model
 gen_ai.configure(api_key=GOOGLE_API_KEY)
 model = gen_ai.GenerativeModel('gemini-pro')
-
-# Function to translate roles between Gemini-Pro and Streamlit terminology
-def translate_role_for_streamlit(user_role):
-    if user_role == "model":
-        return "assistant"
-    else:
-        return user_role
 
 # Initialize chat session in Streamlit if not already present
 if "chat_session" not in st.session_state:
@@ -50,91 +44,76 @@ safety_settings = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
-
 # Main navigation
 with st.sidebar:
     selected = option_menu(
         menu_title="Finance",
-        options=["Stock Dashboard", 'ChatBot',"VisionBot"],
+        options=["Stock Dashboard", "ChatBot", "VisionBot"],
         icons=["graph-up", "robot", "eye"],
         default_index=0,
         orientation="vertical",
     )
-    st.write(
-        """
-        <style>
-            .css-r698ls {
-                --sidebar-width: 200px;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
-# Stock Dashboard Section
 # Stock Dashboard Section
 if selected == "Stock Dashboard":
     st.title('📈 Stock Market Dashboard')
 
-# Sidebar inputs for stock analysis
-default_start = date.today() - timedelta(days=180)
-default_end = date.today()
+    # Sidebar inputs for stock analysis
+    default_start = date.today() - timedelta(days=180)
+    default_end = date.today()
 
-ticker = st.sidebar.text_input('Ticker Symbol', value='AAPL')
-start_date = st.sidebar.date_input('Start Date', value=default_start)
-end_date = st.sidebar.date_input('End Date', value=default_end)
+    ticker = st.sidebar.text_input('Ticker Symbol', value='AAPL')
+    start_date = st.sidebar.date_input('Start Date', value=default_start)
+    end_date = st.sidebar.date_input('End Date', value=default_end)
 
-if ticker:
-    try:
-        # Fetch Stock Data
-        data = yf.download(ticker, start=start_date, end=end_date)
-        
+    if ticker:
+        try:
+            # Fetch Stock Data
+            data = yf.download(ticker, start=start_date, end=end_date)
+            
+            if not data.empty:
+                # Plot Candlestick Chart
+                fig = go.Figure()
+                fig.add_trace(go.Candlestick(
+                    x=data.index,
+                    open=data['Open'],
+                    high=data['High'],
+                    low=data['Low'],
+                    close=data['Close'],
+                    name='Candlestick'
+                ))
+                fig.update_layout(
+                    title=f'{ticker} Candlestick Chart',
+                    xaxis_title='Date',
+                    yaxis_title='Price',
+                    xaxis_rangeslider_visible=False
+                )
+                st.plotly_chart(fig)
+            else:
+                st.error("No data found. Please check the ticker symbol and date range.")
+        except Exception as e:
+            st.error(f"Error fetching stock data: {e}")
+
+    # Tabs for Different Data Analysis
+    pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
+    with pricing_data:
+        st.header("📊 Price Movements")
         if not data.empty:
-            # Plot Candlestick Chart
-            fig = go.Figure()
-            fig.add_trace(go.Candlestick(
-                x=data.index,
-                open=data['Open'],
-                high=data['High'],
-                low=data['Low'],
-                close=data['Close'],
-                name='Candlestick'
-            ))
-            fig.update_layout(
-                title=f'{ticker} Candlestick Chart',
-                xaxis_title='Date',
-                yaxis_title='Price',
-                xaxis_rangeslider_visible=False
-            )
-            st.plotly_chart(fig)
+            data['% Change'] = data['Close'].pct_change() * 100
+            data.dropna(inplace=True)
+            
+            st.dataframe(data[['Close', '% Change']])
+            
+            annual_return = data['% Change'].mean() * 252
+            stdev = np.std(data['% Change']) * np.sqrt(252)
+            risk_adj_return = annual_return / stdev if stdev != 0 else 0
+            
+            st.write(f'📈 **Annual Return:** {annual_return:.2f}%')
+            st.write(f'📊 **Standard Deviation:** {stdev:.2f}%')
+            st.write(f'⚖️ **Risk-Adjusted Return:** {risk_adj_return:.2f}')
         else:
-            st.error("No data found. Please check the ticker symbol and date range.")
-    except Exception as e:
-        st.error(f"Error fetching stock data: {e}")
+            st.warning("No pricing data available.")
 
-# Tabs for Different Data Analysis
-pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
-
-with pricing_data:
-    st.header("📊 Price Movements")
-    if not data.empty:
-        data['% Change'] = data['Close'].pct_change() * 100
-        data.dropna(inplace=True)
-        
-        st.dataframe(data[['Close', '% Change']])
-        
-        annual_return = data['% Change'].mean() * 252
-        stdev = np.std(data['% Change']) * np.sqrt(252)
-        risk_adj_return = annual_return / stdev if stdev != 0 else 0
-        
-        st.write(f'📈 **Annual Return:** {annual_return:.2f}%')
-        st.write(f'📊 **Standard Deviation:** {stdev:.2f}%')
-        st.write(f'⚖️ **Risk-Adjusted Return:** {risk_adj_return:.2f}')
-    else:
-        st.warning("No pricing data available.")
-
-
-    # Fetch Fundamental Data from Alpha Vantage
     with fundamental_data:
         if not alpha_vantage_key:
             st.warning("Alpha Vantage API key is missing. Set ALPHA_VANTAGE_API_KEY in environment variables.")
@@ -143,26 +122,18 @@ with pricing_data:
             try:
                 st.subheader('Balance Sheet')
                 balance_sheet = fd.get_balance_sheet_annual(ticker)[0]
-                bs = balance_sheet.T[2:]
-                bs.columns = list(balance_sheet.T.iloc[0])
-                st.write(bs)
+                st.write(balance_sheet.T[2:])
 
                 st.subheader('Income Statement')
                 income_statement = fd.get_income_statement_annual(ticker)[0]
-                is1 = income_statement.T[2:]
-                is1.columns = list(income_statement.T.iloc[0])
-                st.write(is1)
+                st.write(income_statement.T[2:])
 
                 st.subheader('Cash Flow Statement')
                 cash_flow = fd.get_cash_flow_annual(ticker)[0]
-                cf = cash_flow.T[2:]
-                cf.columns = list(cash_flow.T.iloc[0])
-                st.write(cf)
-
+                st.write(cash_flow.T[2:])
             except Exception as e:
                 st.error(f"Error fetching fundamental data: {e}")
 
-    # Fetch News from MarketAux API
     with news:
         st.header(f'📢 Latest News for {ticker}')
         if not marketaux_api_key:
@@ -187,51 +158,16 @@ with pricing_data:
                 st.error(f"Error fetching news: {e}")
 
 elif selected == "ChatBot":
-     # Display the chatbot's title on the page
     st.title("Chat with Money Maven Bot™")
-
-    # Display the chat history
-    for message in st.session_state.chat_session.history:
-        with st.chat_message(translate_role_for_streamlit(message.role)):
-            st.markdown(message.parts[0].text)
-
-    # Input field for user's message
     user_prompt = st.chat_input("Ask DocBot...")
-
     if user_prompt:
-        # Add user's message to chat and display it
         st.chat_message("user").markdown(user_prompt)
+        response = st.session_state.chat_session.send_message(user_prompt, safety_settings=safety_settings)
+        st.chat_message("assistant").markdown(response.text)
 
-        # Send user's message to Gemini-Pro and get the response
-        
-        gemini_response = st.session_state.chat_session.send_message(
-        user_prompt, safety_settings=safety_settings
-    )
-        # Display Gemini-Pro's response
-        with st.chat_message("assistant"):
-            st.markdown(gemini_response.text)
-# VisionBot Section
 elif selected == "VisionBot":
     st.title("VisionBot Analysis")
-
-    image_prompt = st.text_input("Describe what you'd like to analyze in the image")
     uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "webp"])
-
     if uploaded_file:
         image = Image.open(uploaded_file)
         st.image(image, use_column_width=True)
-
-        if st.button("Analyze Image", use_container_width=True):
-            if image_prompt:
-                model = gen_ai.GenerativeModel("gemini-1.5-flash")
-                try:
-                    response = model.generate_content(
-                        [image_prompt, image_to_byte_array(image)],
-                        safety_settings=safety_settings
-                    )
-                    st.markdown("### Analysis")
-                    st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"Error analyzing image: {e}")
-            else:
-                st.warning("Please provide a prompt for the image analysis")
