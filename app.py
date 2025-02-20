@@ -81,7 +81,7 @@ if selected == "Stock Dashboard":
     end_date = st.sidebar.date_input('End Date')
 
     if ticker and start_date and end_date:
-    try:
+        try:
         # Fetch Stock Data
         data = yf.download(ticker, start=start_date, end=end_date)
 
@@ -104,6 +104,7 @@ if selected == "Stock Dashboard":
 
     except Exception as e:
         st.error(f"Error fetching stock data: {e}")
+    
 
                 # Tabs for different data views
                 pricing_data, fundamental_data, news = st.tabs(["Pricing Data", "Fundamental Data", "Top 10 News"])
