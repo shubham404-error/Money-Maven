@@ -68,11 +68,159 @@ safety_settings = [
 with st.sidebar:
     selected = option_menu(
         menu_title="Finance",
-        options=["Stock Dashboard", "ChatBot", "VisionBot"],
-        icons=["graph-up", "robot", "eye"],
+        options=["MoneyMaven Pro", "Stock Dashboard", "ChatBot", "VisionBot"],
+        icons=["house", "graph-up", "robot", "eye"],
         default_index=0,
         orientation="vertical",
     )
+# Welcome Section
+if selected == "MoneyMaven Pro":
+    st.title("Money Maven Pro")
+    st.subheader("Your Professional Market Intelligence Platform")
+    
+    # Overview Section
+    st.markdown("""
+    Access real-time market data, AI-powered analysis, and advanced visualization tools 
+    in one comprehensive platform.
+    """)
+    
+    # Main Features in Three Columns
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("### Market Dashboard")
+        st.markdown("""
+        Everything you need for market analysis:
+        - Real-time market data
+        - Custom watchlists
+        - Technical indicators
+        - Financial statements
+        - Latest market news
+        """)
+        if st.button("Open Dashboard"):
+            st.session_state.selected_option = "Stock Dashboard"
+            st.rerun()
+            
+    with col2:
+        st.markdown("### Market Intelligence AI")
+        st.markdown("""
+        Your personal market analyst:
+        - Market insights
+        - Company analysis
+        - Strategy validation
+        - Risk assessment
+        - Trend analysis
+        """)
+        if st.button("Access AI Analyst"):
+            st.session_state.selected_option = "ChatBot"
+            st.rerun()
+            
+    with col3:
+        st.markdown("### Technical Analysis")
+        st.markdown("""
+        Advanced chart analysis:
+        - Pattern recognition
+        - Technical indicators
+        - Trend analysis
+        - Chart interpretation
+        - Market signals
+        """)
+        if st.button("Analyze Charts"):
+            st.session_state.selected_option = "VisionBot"
+            st.rerun()
+    
+    # Key Features
+    st.markdown("### Platform Capabilities")
+    
+    tab1, tab2, tab3 = st.tabs(["Market Analysis", "AI Insights", "Technical Tools"])
+    
+    with tab1:
+        st.markdown("""
+        **Market Analysis Suite**
+        - Real-time price monitoring
+        - Custom watchlist management
+        - Financial statement analysis
+        - Key performance metrics
+        - Market news integration
+        """)
+        
+    with tab2:
+        st.markdown("""
+        **AI-Powered Insights**
+        - Market sentiment analysis
+        - Investment strategy validation
+        - Risk assessment tools
+        - Performance forecasting
+        - Pattern recognition
+        """)
+        
+    with tab3:
+        st.markdown("""
+        **Technical Analysis Tools**
+        - Advanced chart analysis
+        - Technical indicator suite
+        - Pattern identification
+        - Trend analysis
+        - Visual market intelligence
+        """)
+    
+    # Quick Start Section
+    st.markdown("### Getting Started")
+    with st.expander("Platform Guide"):
+        st.markdown("""
+        **Market Dashboard:**
+        - Add securities to your watchlist
+        - Access fundamental data
+        - Monitor real-time market movements
+        
+        **AI Analysis:**
+        - Query market conditions
+        - Validate investment hypotheses
+        - Get real-time market insights
+        
+        **Technical Analysis:**
+        - Upload charts for analysis
+        - Identify patterns and trends
+        - Get professional interpretations
+        """)
+    
+    # Market Insights Section
+    st.markdown("### Professional Tools")
+    with st.expander("Available Features"):
+        st.markdown("""
+        **Analysis Tools:**
+        - Real-time market data
+        - Technical indicators
+        - Financial metrics
+        - News integration
+        
+        **Risk Management:**
+        - Portfolio analysis
+        - Market risk assessment
+        - Performance tracking
+        
+        **Market Intelligence:**
+        - AI-driven insights
+        - Pattern recognition
+        - Trend analysis
+        """)
+    
+    # Support Section
+    st.markdown("### Support")
+    with st.expander("Help Center"):
+        st.markdown("""
+        **Need assistance?**
+        - Verify your market data feed
+        - Check security identifiers
+        - Refresh for real-time updates
+        - Contact support for technical issues
+        """)
+        
+    # Disclaimer at the bottom
+    st.markdown("""
+    ---
+    *Market data delayed by 15 minutes unless specified. Analysis tools are for informational purposes only.*
+    """)
 
 # Stock Dashboard Section
 if selected == "Stock Dashboard":
