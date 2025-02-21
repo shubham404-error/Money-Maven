@@ -18,7 +18,7 @@ from streamlit_option_menu import option_menu
 load_dotenv()
 
 # Page config
-st.set_page_config(page_title="Money Maven Pro", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Money Maven Pro", page_icon="💸", layout="wide")
 st.image("logo.png", width=100)
 
 # Initialize API keys
