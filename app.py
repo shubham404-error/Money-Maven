@@ -97,9 +97,7 @@ if selected == "MoneyMaven Pro":
         - Financial statements
         - Latest market news
         """)
-        if st.button("Open Dashboard"):
-            st.session_state.selected_option = "Stock Dashboard"
-            st.rerun()
+        
             
     with col2:
         st.markdown("### Market Intelligence AI")
@@ -111,9 +109,7 @@ if selected == "MoneyMaven Pro":
         - Risk assessment
         - Trend analysis
         """)
-        if st.button("Access AI Analyst"):
-            st.session_state.selected_option = "ChatBot"
-            st.rerun()
+        
             
     with col3:
         st.markdown("### Technical Analysis")
@@ -125,9 +121,7 @@ if selected == "MoneyMaven Pro":
         - Chart interpretation
         - Market signals
         """)
-        if st.button("Analyze Charts"):
-            st.session_state.selected_option = "VisionBot"
-            st.rerun()
+        
     
     # Key Features
     st.markdown("### Platform Capabilities")
